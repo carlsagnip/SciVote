@@ -7,8 +7,8 @@ const isDev = !app.isPackaged;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1920,
+    height: 1080,
     icon: path.join(__dirname, '../dist/icon.png'), // Add app icon
     webPreferences: {
       nodeIntegration: false,
