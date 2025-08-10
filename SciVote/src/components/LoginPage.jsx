@@ -29,9 +29,14 @@ export default function LoginPage({ onLogin, onAdmin }) {
           <ErrorBanner message={errorMessage} onClose={() => setErrorMessage('')} />
         )}
 
-        {/* Header */}
+        {/* Header with imported image */}
         <div className="text-center mb-5">
-          <div className="bg-[url('hxz.jpg')] bg-cover bg-center w-full aspect-[5/2]"></div>
+          <img
+            src="hxz.png"
+            alt="Header"
+            className="w-full object-cover"
+            style={{ aspectRatio: '5 / 2' }}
+          />
         </div>
 
         {/* Login Section */}
