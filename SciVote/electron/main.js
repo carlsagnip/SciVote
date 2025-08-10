@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
 
 let mainWindow;
@@ -16,6 +16,9 @@ function createWindow() {
       nodeIntegration: false
     }
   });
+
+  // Remove the default menu bar (File, Edit, View, etc.)
+  Menu.setApplicationMenu(null);
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
