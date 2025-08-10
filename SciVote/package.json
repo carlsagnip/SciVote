@@ -17,7 +17,9 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.5.0",
+    "vector-icons": "^0.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
