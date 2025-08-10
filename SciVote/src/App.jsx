@@ -16,43 +16,28 @@ function App() {
 
   const LoginPage = () => (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 font-sans">
-      <div className="bg-white p-10 rounded-lg shadow-md w-full max-w-md">
+      <div className="bg-white rounded-lg shadow-md w-full max-w-4xl overflow-hidden">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-red-800 text-3xl font-bold mb-2">
-            SciVote
-          </h1>
-          <p className="text-gray-500 text-base leading-6">
-            Honorato C. Perez, Sr. Memorial Science High School<br />
-            Voting System
-          </p>
+        <div className="bg-[url('hxz.jpg')] bg-cover bg-center w-full aspect-[5/2]"></div>
         </div>
 
         {/* Login Section */}
         <div>
-          <div className="mb-5">
-            <label className="block mb-2 text-sm font-medium text-gray-700">
-              Student ID
-            </label>
+          <div className="mb-5 mr-10 ml-10">
             <input
               placeholder="Enter your student ID"
               className="w-full p-3 border border-gray-300 rounded text-base focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent"
             />
           </div>
           
+          <div className='mb-5 mr-10 ml-10'>
           <button
             onClick={handleLogin}
-            className="w-full bg-red-800 text-white p-3 border-none rounded-md text-base font-medium cursor-pointer hover:bg-red-900 transition-colors duration-200"
-          >
+            className="w-full bg-red-800 text-white p-3 border-none rounded-md text-base font-medium cursor-pointer hover:bg-red-900 transition-colors duration-200">
             Login
           </button>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-8 pt-5 border-t border-gray-200">
-          <p className="text-gray-400 text-sm m-0">
-            Enter your student ID to access the voting system
-          </p>
+          </div>
         </div>
       </div>
     </div>
