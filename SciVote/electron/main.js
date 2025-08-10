@@ -2,17 +2,18 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
 let mainWindow;
-
 const isDev = !app.isPackaged;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1920,
     height: 1080,
-    icon: path.join(__dirname, '../dist/icon.png'), // Add app icon
+    center: true,
+    icon: path.join(__dirname, '../dist/icon.png'),
     webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
     }
   });
 
