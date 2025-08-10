@@ -26,7 +26,6 @@ export default function Candidates({ candidates, setCandidates, onBack }) {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 relative">
-      {/* Error banner overlay */}
       {errorMessage && (
         <div className="absolute -top-12 left-0 w-full">
           <ErrorBanner
