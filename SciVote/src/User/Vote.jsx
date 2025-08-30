@@ -12,12 +12,12 @@ export default function Vote({ studentId, onLogout }) {
   const [submitted, setSubmitted] = useState(false);
 
   const positions = [
-    { id: 'president', title: 'School President', candidates: ['Justin Miguel Dim Light', 'Simoan Roy Abella Danger'] },
-    { id: 'vicePresident', title: 'Vice President', candidates: ['Czianel Kasi Eh', 'Erwin Shinzou Sasageyo'] },
-    { id: 'secretary', title: 'Secretary', candidates: ['Justin Kurt Cubao', 'Mel Moses Sleeping', 'John Daniel Toledo'] },
-    { id: 'treasurer', title: 'Treasurer', candidates: ['Mark Richard Bisaya', 'Gian Carlo Esposito', 'Joreen Faye'] },
-    { id: 'auditor', title: 'Auditor', candidates: ['Mark Robert Binembang', 'Jeru Bakulao', 'Harolf Barag'] },
-    { id: 'pio', title: 'Public Information Officer', candidates: ['Jhonzen Meralco', 'Carl Cannot Submit'] }
+    { id: 'president', title: 'School President', candidates: ['Justin Miguel Dimla', 'Simone Roy Abello'] },
+    { id: 'vicePresident', title: 'Vice President', candidates: ['Czianel Santos', 'John Erwin Domingo'] },
+    { id: 'secretary', title: 'Secretary', candidates: ['Justin Kurt Fajardo', 'Mel Moses Seeping', 'John Daniel Torreda'] },
+    { id: 'treasurer', title: 'Treasurer', candidates: ['Mark Richard Eugenio', 'Gian Carlo Cruz'] },
+    { id: 'auditor', title: 'Auditor', candidates: ['Mark Robert Bayudang', 'Jeru Balulao', 'Harold Isaiah Carag'] },
+    { id: 'pio', title: 'Public Information Officer', candidates: ['Jhon Zen Mercado', 'Carl Kenneth Sagnip'] }
   ];
 
   const handleVoteChange = (position, candidate) => {
