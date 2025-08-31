@@ -1,32 +1,50 @@
-import { useState } from 'react';
-import Vote from './User/Vote';
-import Admin from './Admin/Admin';
-import LoginPage from './components/LoginPage';
+import { useState } from "react";
+import LoginPage from "./components/LoginPage";
+import Vote from "./User/Vote";
+import Admin from "./Admin/Admin";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('main');
-  const [studentId, setStudentId] = useState('');
+  const [currentView, setCurrentView] = useState("login"); // 'login', 'vote', 'admin'
+  const [loggedInStudent, setLoggedInStudent] = useState(null);
 
-  const handleLogin = () => {
-    setCurrentPage('vote');
-  };
-
-  const handleAdmin = () => {
-    setCurrentPage('admin');
+  const handleStudentLogin = (studentData) => {
+    setLoggedInStudent(studentData);
+    setCurrentView("vote");
   };
 
   const handleLogout = () => {
-    setCurrentPage('main');
-    setStudentId('');
+    setLoggedInStudent(null);
+    setCurrentView("login");
   };
 
-  if (currentPage === 'main') {
-    return <LoginPage onLogin={handleLogin} onAdmin={handleAdmin} />;
-  } else if (currentPage === 'vote') {
-    return <Vote studentId={studentId} onLogout={handleLogout} />;
-  } else if (currentPage === 'admin') {
-    return <Admin />;
+  const handleAdminAccess = () => {
+    setCurrentView("admin");
+  };
+
+  const handleBackToLogin = () => {
+    setCurrentView("login");
+  };
+
+  if (currentView === "login") {
+    return (
+      <LoginPage onLogin={handleStudentLogin} onAdmin={handleAdminAccess} />
+    );
   }
+
+  if (currentView === "vote" && loggedInStudent) {
+    return <Vote studentData={loggedInStudent} onLogout={handleLogout} />;
+  }
+
+  if (currentView === "admin") {
+    return (
+      <Admin
+        onBack={handleBackToLogin} // Add this line
+      />
+    );
+  }
+
+  // Fallback to login if something goes wrong
+  return <LoginPage onLogin={handleStudentLogin} onAdmin={handleAdminAccess} />;
 }
 
 export default App;

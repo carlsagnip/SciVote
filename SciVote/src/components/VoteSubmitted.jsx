@@ -1,6 +1,6 @@
 import MainHeader from "./MainHeader";
 
-export default function VoteSubmitted({ onViewSummary, onExit, studentId }) {
+export default function VoteSubmitted({ onExit, studentId }) {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -17,12 +17,6 @@ export default function VoteSubmitted({ onViewSummary, onExit, studentId }) {
           <h2 className="text-2xl font-bold text-gray-800">Vote Submitted!</h2>
           <p className="text-gray-600 mt-2">Thank you for participating in the student government elections.</p>
           <div className="mt-6 space-y-3">
-            <button
-              onClick={onViewSummary}
-              className="w-full bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
-            >
-              View Vote Summary
-            </button>
             <button
               onClick={onExit}
               className="w-full bg-red-800 text-white px-6 py-2 rounded-md hover:bg-red-900 transition"
