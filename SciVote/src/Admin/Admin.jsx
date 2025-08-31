@@ -184,12 +184,8 @@ export default function Admin({ onBack }) { // Accept onBack prop from App compo
             {/* Header Section */}
             <div className="text-center space-y-4">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                Admin Dashboard
+                Administrator Tools
               </h1>
-              <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                Manage your voting system with powerful tools and real-time
-                insights
-              </p>
             </div>
 
             {/* Menu Cards */}

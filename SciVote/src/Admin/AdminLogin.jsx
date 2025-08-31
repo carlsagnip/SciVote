@@ -68,7 +68,7 @@ export default function AdminLogin({
       <Header onBackToLogin={onBackToLogin} />
 
       {/* Main Content */}
-      <main className="flex items-center justify-center px-4 py-16 pt-32">
+      <main className="flex items-center justify-center px-4 py-16 pt-96">
         <div className="w-full max-w-md">
           {/* Login Card */}
           <div className="bg-white backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-200 overflow-visible relative">
