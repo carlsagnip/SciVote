@@ -502,19 +502,19 @@ export default function Candidates({ onBack }) {
         </button>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Statistics Cards - Updated with Maroon Gradients */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-gradient-to-r from-red-800 to-red-900 rounded-xl p-6 text-white">
           <div className="text-3xl font-bold">{candidates.length}</div>
           <div className="text-red-100">Total Candidates</div>
         </div>
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
+        <div className="bg-gradient-to-r from-red-700 to-red-800 rounded-xl p-6 text-white">
           <div className="text-3xl font-bold">{partyLists.length}</div>
-          <div className="text-blue-100">Active Party Lists</div>
+          <div className="text-red-100">Active Party Lists</div>
         </div>
-        <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-6 text-white">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-xl p-6 text-white">
           <div className="text-3xl font-bold">{positions.length}</div>
-          <div className="text-green-100">Available Positions</div>
+          <div className="text-red-100">Available Positions</div>
         </div>
       </div>
 
