@@ -213,8 +213,11 @@ export default function Tally({ onBack }) {
               <h1 className="text-3xl font-bold text-slate-800 mb-1">Live Election Results</h1>
               <p className="text-slate-500 text-sm">Auto-refreshing • Last updated: {lastUpdate.toLocaleTimeString()}</p>
             </div>
-            <button onClick={onBack} className="bg-slate-700 hover:bg-slate-800 text-white px-6 py-2.5 rounded-lg transition-colors font-medium text-sm flex items-center gap-2">
-              <FiArrowLeft className="w-4 h-4" /> Back to Dashboard
+            <button onClick={onBack} className="flex items-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors border">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
             </button>
           </div>
         </div>

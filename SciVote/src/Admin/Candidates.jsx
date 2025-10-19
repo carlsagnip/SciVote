@@ -308,9 +308,11 @@ export default function Candidates({ onBack }) {
         </div>
         <button
           onClick={onBack}
-          className="bg-slate-500 hover:bg-slate-600 text-white px-6 py-3 rounded-xl transition-colors duration-200 font-medium"
-        >
-          ← Back to Dashboard
+          className="flex items-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors border">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
         </button>
       </div>
 
