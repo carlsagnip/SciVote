@@ -11,24 +11,39 @@ function Header({ onBackToLogin }) {
             {/* Admin Icon */}
             <div className="relative">
               <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <svg
+                  className="w-7 h-7 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
                 </svg>
               </div>
             </div>
-                     
+
             {/* Brand Text */}
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-red-100 bg-clip-text text-transparent">
-                SciVote Admin
+                SRLVote Admin
               </h1>
               <p className="text-red-200/80 text-sm font-medium tracking-wide">
                 Election Management Dashboard
               </p>
             </div>
           </div>
-           
+
           {/* Return to Voter View Button */}
           <div className="flex items-center gap-4">
             <button
@@ -41,7 +56,7 @@ function Header({ onBackToLogin }) {
             </button>
           </div>
         </div>
-         
+
         {/* Bottom Accent Border */}
         <div className="mt-4 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
       </div>
@@ -55,7 +70,7 @@ export default function AdminLogin({
   handleAdminLogin,
   errorMessage,
   setErrorMessage,
-  onBackToLogin // Add this prop for navigation back to login
+  onBackToLogin, // Add this prop for navigation back to login
 }) {
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -81,21 +96,25 @@ export default function AdminLogin({
                 />
               </div>
             )}
-            
+
             {/* Card Header */}
             <div className="bg-gradient-to-r from-red-800 to-red-900 px-8 py-6 rounded-t-2xl">
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-white">SciVote Administrator</h2>
+                <h2 className="text-2xl font-bold text-white">
+                  SRLVote Administrator
+                </h2>
                 <p className="text-red-100 text-sm mt-1">(admin only)</p>
               </div>
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6">
-
               {/* Username Field */}
               <div className="space-y-2">
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Username
                 </label>
                 <div className="relative">
@@ -121,7 +140,10 @@ export default function AdminLogin({
 
               {/* Password Field */}
               <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -157,10 +179,17 @@ export default function AdminLogin({
               {/* Demo Credentials */}
               <div className="pt-4 border-t border-gray-100">
                 <div className="bg-blue-50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-blue-600 font-medium mb-1">Demo Credentials</p>
+                  <p className="text-xs text-blue-600 font-medium mb-1">
+                    Demo Credentials
+                  </p>
                   <p className="text-sm text-blue-700">
-                    <span className="font-mono bg-white px-2 py-1 rounded">admin</span> / 
-                    <span className="font-mono bg-white px-2 py-1 rounded ml-1">admin123</span>
+                    <span className="font-mono bg-white px-2 py-1 rounded">
+                      admin
+                    </span>{" "}
+                    /
+                    <span className="font-mono bg-white px-2 py-1 rounded ml-1">
+                      admin123
+                    </span>
                   </p>
                 </div>
               </div>

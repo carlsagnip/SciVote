@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Fingerprint } from "lucide-react";
 import ErrorBanner from "../components/ErrorBanner";
 import StudentDetailModal from "../components/StudentDetailModal";
 
@@ -113,13 +114,21 @@ const StudentCard = ({ student, onRemove, saving, onClick }) => {
                 </span>
               )}
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="font-semibold text-gray-800 text-lg">
                 {student.fullName}
               </h3>
-              <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
-                ID: {student.schoolId}
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
+                  ID: {student.schoolId}
+                </span>
+                {student.fingerprint && (
+                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <Fingerprint className="w-3 h-3" />
+                    Fingerprint
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -160,12 +169,14 @@ export default function RegisterStudents({ onBack = () => {} }) {
     lastName: "",
     middleInitial: "",
     photo: "",
+    fingerprint: "", // Dummy fingerprint ID
   });
   const [photoPreview, setPhotoPreview] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [scanningFingerprint, setScanningFingerprint] = useState(false);
 
   // Modal state
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -234,6 +245,23 @@ export default function RegisterStudents({ onBack = () => {} }) {
     setPhotoPreview("");
   };
 
+  const handleFingerprintCapture = () => {
+    setScanningFingerprint(true);
+
+    // Simulate fingerprint scanning (1.5 seconds)
+    setTimeout(() => {
+      // Generate a dummy fingerprint ID (hash-like string)
+      const fingerprintId = `FP-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 9)
+        .toUpperCase()}`;
+      setForm({ ...form, fingerprint: fingerprintId });
+      setScanningFingerprint(false);
+      setSuccess("Fingerprint captured successfully!");
+      setTimeout(() => setSuccess(""), 2000);
+    }, 1500);
+  };
+
   const handleAdd = async () => {
     const trimmed = {
       schoolId: form.schoolId.trim(),
@@ -245,6 +273,8 @@ export default function RegisterStudents({ onBack = () => {} }) {
     if (!trimmed.schoolId) return setError("School ID cannot be empty.");
     if (!trimmed.firstName) return setError("First name cannot be empty.");
     if (!trimmed.lastName) return setError("Last name cannot be empty.");
+    if (!form.fingerprint)
+      return setError("Fingerprint is required. Please capture a fingerprint.");
     if (students.find((s) => s.schoolId === trimmed.schoolId))
       return setError("This school ID is already registered.");
 
@@ -254,6 +284,7 @@ export default function RegisterStudents({ onBack = () => {} }) {
         trimmed.middleInitial ? trimmed.middleInitial + ". " : ""
       }${trimmed.lastName}`,
       photo: form.photo || "", // Store the base64 photo string
+      fingerprint: form.fingerprint || "", // Store the fingerprint ID
     };
 
     const updated = [...students, newStudent];
@@ -265,6 +296,7 @@ export default function RegisterStudents({ onBack = () => {} }) {
       lastName: "",
       middleInitial: "",
       photo: "",
+      fingerprint: "",
     });
     setPhotoPreview("");
     setError("");
@@ -377,7 +409,7 @@ export default function RegisterStudents({ onBack = () => {} }) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow-lg border p-6 h-[600px]">
+          <div className="bg-white rounded-xl shadow-lg border p-6 h-[800px]">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-2">
                 Add New Student
@@ -521,6 +553,81 @@ export default function RegisterStudents({ onBack = () => {} }) {
                 </div>
               </div>
 
+              {/* Fingerprint Registration */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Fingerprint <span className="text-red-500">*</span>
+                </label>
+                <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-4">
+                  {form.fingerprint ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-green-700">
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span className="font-medium text-sm">
+                          Fingerprint Registered
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 font-mono bg-white px-2 py-1 rounded border">
+                        {form.fingerprint}
+                      </p>
+                      <button
+                        onClick={() => setForm({ ...form, fingerprint: "" })}
+                        disabled={saving || scanningFingerprint}
+                        className="text-sm text-red-600 hover:text-red-800 font-medium"
+                      >
+                        Remove Fingerprint
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="flex justify-center mb-3">
+                        <Fingerprint
+                          className={`w-16 h-16 ${
+                            scanningFingerprint
+                              ? "text-red-600 animate-pulse"
+                              : "text-gray-400"
+                          } transition-colors duration-300`}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">
+                        {scanningFingerprint
+                          ? "Scanning fingerprint..."
+                          : "No fingerprint registered"}
+                      </p>
+                      <button
+                        onClick={handleFingerprintCapture}
+                        disabled={saving || scanningFingerprint}
+                        className="bg-gray-700 hover:bg-gray-800 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mx-auto"
+                      >
+                        {scanningFingerprint ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Scanning...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Fingerprint className="w-4 h-4" />
+                            <span>Capture Fingerprint</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <button
                 onClick={handleAdd}
                 disabled={saving}
@@ -555,7 +662,7 @@ export default function RegisterStudents({ onBack = () => {} }) {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg border p-6 h-[600px]">
+          <div className="bg-white rounded-xl shadow-lg border p-6 h-[800px]">
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">
@@ -652,7 +759,7 @@ export default function RegisterStudents({ onBack = () => {} }) {
               <div className="w-12 h-1 bg-red-800 rounded-full"></div>
             </div>
 
-            <div className="space-y-3 overflow-y-auto h-80">
+            <div className="space-y-3 overflow-y-auto h-[600px]">
               {filtered.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
