@@ -3,20 +3,8 @@ import { Fingerprint } from "lucide-react";
 import { useState, useEffect } from "react";
 import ErrorBanner from "../components/ErrorBanner";
 import GuidelinesPopup from "./GuidelinesPopup";
-
-// Simulated async storage functions
-const AsyncStorage = {
-  getItem: async (key) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const data = localStorage.getItem(key);
-        resolve(data ? JSON.parse(data) : null);
-      }, 100);
-    });
-  },
-};
-
-const STUDENTS_STORAGE_KEY = "registered_students";
+import { supabase } from "../lib/supabaseClient";
+import { studentsDB, votesDB } from "../lib/supabaseHelpers";
 
 export default function LoginPage({ onLogin, onAdmin }) {
   const [showGuidelines, setShowGuidelines] = useState(false);
@@ -32,18 +20,30 @@ export default function LoginPage({ onLogin, onAdmin }) {
   // Load registered students on component mount
   useEffect(() => {
     loadRegisteredStudents();
+
+    // Test Supabase connection
+    console.log("🟢 Supabase client initialized:", supabase);
+    console.log("🔗 Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
   }, []);
 
   const loadRegisteredStudents = async () => {
     try {
       setLoading(true);
-      const storedStudents = await AsyncStorage.getItem(STUDENTS_STORAGE_KEY);
+      const data = await studentsDB.getAll();
 
-      if (storedStudents && Array.isArray(storedStudents)) {
-        setRegisteredStudents(storedStudents);
-      } else {
-        setRegisteredStudents([]);
-      }
+      // Transform to match old format
+      const transformedStudents = data.map((s) => ({
+        schoolId: s.school_id,
+        firstName: s.first_name,
+        lastName: s.last_name,
+        middleInitial: s.middle_initial,
+        fullName: s.full_name,
+        photo: s.photo,
+        fingerprint: s.fingerprint,
+        hasVoted: s.has_voted,
+        votingStatus: s.voting_status,
+      }));
+      setRegisteredStudents(transformedStudents);
     } catch (error) {
       console.error("Failed to load registered students:", error);
       setErrorMessage("Failed to load student data. Please try again.");
@@ -62,10 +62,8 @@ export default function LoginPage({ onLogin, onAdmin }) {
     setErrorMessage("");
 
     try {
-      // Check if student ID exists in registered students
-      const student = registeredStudents.find(
-        (s) => s.schoolId.toLowerCase() === studentId.trim().toLowerCase()
-      );
+      // Check if student ID exists in database
+      const student = await studentsDB.getBySchoolId(studentId.trim());
 
       if (!student) {
         setErrorMessage(
@@ -76,10 +74,7 @@ export default function LoginPage({ onLogin, onAdmin }) {
       }
 
       // Check if student has already voted
-      const existingVote = await AsyncStorage.getItem(
-        `vote_${student.schoolId}`
-      );
-      if (existingVote) {
+      if (student.has_voted) {
         setErrorMessage(
           "This student ID has already been used to vote. Each student can only vote once."
         );
@@ -96,9 +91,20 @@ export default function LoginPage({ onLogin, onAdmin }) {
         return;
       }
 
+      // Transform to match expected format
+      const transformedStudent = {
+        schoolId: student.school_id,
+        firstName: student.first_name,
+        lastName: student.last_name,
+        middleInitial: student.middle_initial,
+        fullName: student.full_name,
+        photo: student.photo,
+        fingerprint: student.fingerprint,
+      };
+
       // Student ID is valid and hasn't voted yet, store the student
       // Don't show guidelines yet - wait for fingerprint scan
-      setValidatedStudent(student);
+      setValidatedStudent(transformedStudent);
       setValidatingLogin(false);
       setFingerprintScanned(false);
     } catch (error) {

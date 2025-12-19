@@ -11,22 +11,7 @@ import {
 } from "react-icons/fi";
 import { BsTrophy } from "react-icons/bs";
 import { User } from "lucide-react";
-
-const AsyncStorage = {
-  getItem: async (key) =>
-    new Promise((resolve) => {
-      setTimeout(() => {
-        const data = localStorage.getItem(key);
-        resolve(data ? JSON.parse(data) : null);
-      }, 100);
-    }),
-};
-
-const STORAGE_KEYS = {
-  candidates: "registered_candidates",
-  students: "registered_students",
-  votes: "all_votes",
-};
+import { studentsDB, candidatesDB, votesDB } from "../lib/supabaseHelpers";
 
 const POSITION_KEYS = {
   President: "president",
@@ -50,17 +35,42 @@ export default function Tally({ onBack }) {
   const loadData = async () => {
     try {
       setError("");
-      const [candidates, students, votes] = await Promise.all(
-        Object.values(STORAGE_KEYS).map((key) => AsyncStorage.getItem(key))
-      );
+
+      // Load all data from Supabase
+      const [candidatesData, studentsData, votesData] = await Promise.all([
+        candidatesDB.getAll(),
+        studentsDB.getAll(),
+        votesDB.getAll(),
+      ]);
+
+      // Transform students data
+      const transformedStudents = studentsData.map((s) => ({
+        schoolId: s.school_id,
+        firstName: s.first_name,
+        lastName: s.last_name,
+        middleInitial: s.middle_initial,
+        fullName: s.full_name,
+        photo: s.photo,
+        fingerprint: s.fingerprint,
+      }));
+
+      // Transform votes data
+      const transformedVotes = votesData.map((v) => ({
+        studentId: v.school_id,
+        studentName: v.student_name,
+        votes: v.votes,
+        timestamp: v.submitted_at,
+      }));
+
       setData({
-        candidates: candidates || [],
-        students: students || [],
-        votes: votes || [],
+        candidates: candidatesData || [],
+        students: transformedStudents || [],
+        votes: transformedVotes || [],
       });
       setLastUpdate(new Date());
       setLoading(false);
     } catch (err) {
+      console.error("Failed to load data:", err);
       setError("Failed to load election data. Please try again.");
       setLoading(false);
     }

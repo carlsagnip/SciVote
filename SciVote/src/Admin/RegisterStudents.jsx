@@ -2,27 +2,7 @@ import { useState, useEffect } from "react";
 import { Fingerprint } from "lucide-react";
 import ErrorBanner from "../components/ErrorBanner";
 import StudentDetailModal from "../components/StudentDetailModal";
-
-const AsyncStorage = {
-  getItem: async (key) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const data = localStorage.getItem(key);
-        resolve(data ? JSON.parse(data) : null);
-      }, 100);
-    });
-  },
-  setItem: async (key, value) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        localStorage.setItem(key, JSON.stringify(value));
-        resolve();
-      }, 100);
-    });
-  },
-};
-
-const STORAGE_KEY = "registered_students";
+import { studentsDB } from "../lib/supabaseHelpers";
 
 const Banner = ({ message, type, onClose }) => (
   <div
@@ -91,7 +71,6 @@ const InputField = ({ label, required, icon, ...props }) => (
 );
 
 const StudentCard = ({ student, onRemove, saving, onClick }) => {
-  const originalIndex = student.originalIndex;
   return (
     <div
       className="group bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:border-red-200 hover:bg-red-50 cursor-pointer"
@@ -135,7 +114,7 @@ const StudentCard = ({ student, onRemove, saving, onClick }) => {
         <button
           onClick={(e) => {
             e.stopPropagation(); // Prevent card click when clicking delete
-            onRemove(originalIndex);
+            onRemove(student.schoolId);
           }}
           disabled={saving}
           className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
@@ -188,26 +167,40 @@ export default function RegisterStudents({ onBack = () => {} }) {
 
   const loadStudents = async () => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      setStudents(stored && Array.isArray(stored) ? stored : []);
+      console.log("📥 Loading students from database...");
+      const data = await studentsDB.getAll();
+      console.log(`📊 Loaded ${data.length} students from database:`, data);
+      // Transform to match old format
+      const transformedStudents = data.map((s) => ({
+        schoolId: s.school_id,
+        firstName: s.first_name,
+        lastName: s.last_name,
+        middleInitial: s.middle_initial,
+        fullName: s.full_name,
+        photo: s.photo,
+        fingerprint: s.fingerprint,
+        hasVoted: s.has_voted,
+        votingStatus: s.voting_status,
+      }));
+      console.log(
+        `📊 Transformed ${transformedStudents.length} students:`,
+        transformedStudents
+      );
+      setStudents(transformedStudents);
+      console.log("✅ Students state updated");
     } catch (err) {
+      console.error("Failed to load students:", err);
       setError("Failed to load student data. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  // No longer needed - operations are done directly with Supabase
+  // Keeping for compatibility but it does nothing
   const saveStudents = async (newStudents) => {
-    try {
-      setSaving(true);
-      await AsyncStorage.setItem(STORAGE_KEY, newStudents);
-      setSuccess("Student data saved successfully!");
-      setTimeout(() => setSuccess(""), 3000);
-    } catch (err) {
-      setError("Failed to save student data. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+    // This function is no longer used - operations happen directly
+    return Promise.resolve();
   };
 
   const handlePhotoUpload = async (e) => {
@@ -278,34 +271,64 @@ export default function RegisterStudents({ onBack = () => {} }) {
     if (students.find((s) => s.schoolId === trimmed.schoolId))
       return setError("This school ID is already registered.");
 
-    const newStudent = {
-      ...trimmed,
-      fullName: `${trimmed.firstName} ${
-        trimmed.middleInitial ? trimmed.middleInitial + ". " : ""
-      }${trimmed.lastName}`,
-      photo: form.photo || "", // Store the base64 photo string
-      fingerprint: form.fingerprint || "", // Store the fingerprint ID
-    };
+    try {
+      setSaving(true);
+      const newStudentData = {
+        schoolId: trimmed.schoolId,
+        firstName: trimmed.firstName,
+        lastName: trimmed.lastName,
+        middleInitial: trimmed.middleInitial,
+        fullName: `${trimmed.firstName} ${
+          trimmed.middleInitial ? trimmed.middleInitial + ". " : ""
+        }${trimmed.lastName}`,
+        photo: form.photo || "",
+        fingerprint: form.fingerprint,
+      };
 
-    const updated = [...students, newStudent];
-    setStudents(updated);
-    await saveStudents(updated);
-    setForm({
-      schoolId: "",
-      firstName: "",
-      lastName: "",
-      middleInitial: "",
-      photo: "",
-      fingerprint: "",
-    });
-    setPhotoPreview("");
-    setError("");
+      await studentsDB.create(newStudentData);
+
+      // Reload students from database
+      await loadStudents();
+
+      setForm({
+        schoolId: "",
+        firstName: "",
+        lastName: "",
+        middleInitial: "",
+        photo: "",
+        fingerprint: "",
+      });
+      setPhotoPreview("");
+      setError("");
+      setSuccess("Student registered successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      console.error("Failed to add student:", err);
+      setError("Failed to register student. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleRemove = async (index) => {
-    const updated = students.filter((_, i) => i !== index);
-    setStudents(updated);
-    await saveStudents(updated);
+  const handleRemove = async (schoolId) => {
+    try {
+      console.log("🔄 Starting deletion for schoolId:", schoolId);
+      setSaving(true);
+      await studentsDB.delete(schoolId);
+      console.log("✅ Delete successful, reloading students...");
+
+      // Reload students from database
+      await loadStudents();
+      console.log("✅ Students reloaded successfully");
+
+      setSuccess("Student removed successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      console.error("Failed to remove student:", err);
+      setError("Failed to remove student. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Modal handlers
@@ -315,43 +338,56 @@ export default function RegisterStudents({ onBack = () => {} }) {
   };
 
   const handleUpdateStudent = async (updatedStudent) => {
-    const updated = students.map((s) =>
-      s.schoolId === updatedStudent.schoolId ? updatedStudent : s
-    );
-    setStudents(updated);
-    await saveStudents(updated);
-    setShowModal(false);
-    setSuccess("Student updated successfully!");
-    setTimeout(() => setSuccess(""), 3000);
+    try {
+      setSaving(true);
+      await studentsDB.update(updatedStudent.schoolId, updatedStudent);
+
+      // Reload students from database
+      await loadStudents();
+
+      setShowModal(false);
+      setSuccess("Student updated successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      console.error("Failed to update student:", err);
+      setError("Failed to update student. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDeleteStudent = async (schoolId) => {
-    const updated = students.filter((s) => s.schoolId !== schoolId);
-    setStudents(updated);
-    await saveStudents(updated);
-    setShowModal(false);
-    setSuccess("Student deleted successfully!");
-    setTimeout(() => setSuccess(""), 3000);
+    try {
+      setSaving(true);
+      await studentsDB.delete(schoolId);
+
+      // Reload students from database
+      await loadStudents();
+
+      setShowModal(false);
+      setSuccess("Student deleted successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      console.error("Failed to delete student:", err);
+      setError("Failed to delete student. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const filtered = students
-    .filter((s) => {
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      if (filter === "all")
-        return (
-          s.firstName.toLowerCase().includes(q) ||
-          s.lastName.toLowerCase().includes(q) ||
-          s.schoolId.toLowerCase().includes(q) ||
-          s.middleInitial.toLowerCase().includes(q) ||
-          s.fullName.toLowerCase().includes(q)
-        );
-      return s[filter].toLowerCase().includes(q);
-    })
-    .map((s, i) => ({
-      ...s,
-      originalIndex: students.findIndex((st) => st.schoolId === s.schoolId),
-    }));
+  const filtered = students.filter((s) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    if (filter === "all")
+      return (
+        s.firstName.toLowerCase().includes(q) ||
+        s.lastName.toLowerCase().includes(q) ||
+        s.schoolId.toLowerCase().includes(q) ||
+        s.middleInitial.toLowerCase().includes(q) ||
+        s.fullName.toLowerCase().includes(q)
+      );
+    return s[filter].toLowerCase().includes(q);
+  });
 
   if (loading) {
     return (

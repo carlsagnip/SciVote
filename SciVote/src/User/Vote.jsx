@@ -3,30 +3,7 @@ import { ChevronLeft, ChevronRight, User, X } from "lucide-react";
 import VoteSubmitted from "../components/VoteSubmitted";
 import VoteSummary from "../components/VoteSummary";
 import Header from "../components/MainHeader";
-
-// Simulated async storage functions (matching your Candidates component)
-const AsyncStorage = {
-  getItem: async (key) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const data = localStorage.getItem(key);
-        resolve(data ? JSON.parse(data) : null);
-      }, 100);
-    });
-  },
-
-  setItem: async (key, value) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        localStorage.setItem(key, JSON.stringify(value));
-        resolve();
-      }, 100);
-    });
-  },
-};
-
-const CANDIDATES_STORAGE_KEY = "registered_candidates";
-const STUDENTS_STORAGE_KEY = "registered_students";
+import { studentsDB, candidatesDB, votesDB } from "../lib/supabaseHelpers";
 
 export default function Vote({ studentData = null, onLogout = () => {} }) {
   const [votes, setVotes] = useState({});
@@ -60,16 +37,8 @@ export default function Vote({ studentData = null, onLogout = () => {} }) {
         return;
       }
 
-      const storedStudents = await AsyncStorage.getItem(STUDENTS_STORAGE_KEY);
-      if (!storedStudents || !Array.isArray(storedStudents)) {
-        setError(
-          "Unable to verify student registration. Please contact administrator."
-        );
-        return;
-      }
-
-      const registeredStudent = storedStudents.find(
-        (s) => s.schoolId.toLowerCase() === studentData.schoolId.toLowerCase()
+      const registeredStudent = await studentsDB.getBySchoolId(
+        studentData.schoolId
       );
 
       if (!registeredStudent) {
@@ -79,13 +48,9 @@ export default function Vote({ studentData = null, onLogout = () => {} }) {
         return;
       }
 
-      const existingVote = await AsyncStorage.getItem(
-        `vote_${studentData.schoolId}`
-      );
       if (
-        existingVote ||
-        registeredStudent.hasVoted ||
-        registeredStudent.votingStatus === "completed"
+        registeredStudent.has_voted ||
+        registeredStudent.voting_status === "completed"
       ) {
         setError(
           "You have already submitted your vote. Each student can only vote once."
@@ -93,7 +58,17 @@ export default function Vote({ studentData = null, onLogout = () => {} }) {
         return;
       }
 
-      setValidatedStudent(registeredStudent);
+      // Transform to match expected format
+      const transformedStudent = {
+        schoolId: registeredStudent.school_id,
+        firstName: registeredStudent.first_name,
+        lastName: registeredStudent.last_name,
+        middleInitial: registeredStudent.middle_initial,
+        fullName: registeredStudent.full_name,
+        photo: registeredStudent.photo,
+        fingerprint: registeredStudent.fingerprint,
+      };
+      setValidatedStudent(transformedStudent);
     } catch (error) {
       console.error("Student validation error:", error);
       setError("Failed to validate student information. Please try again.");
@@ -102,10 +77,17 @@ export default function Vote({ studentData = null, onLogout = () => {} }) {
 
   const loadStudents = async () => {
     try {
-      const storedStudents = await AsyncStorage.getItem(STUDENTS_STORAGE_KEY);
-      if (storedStudents && Array.isArray(storedStudents)) {
-        setStudents(storedStudents);
-      }
+      const data = await studentsDB.getAll();
+      const transformedStudents = data.map((s) => ({
+        schoolId: s.school_id,
+        firstName: s.first_name,
+        lastName: s.last_name,
+        middleInitial: s.middle_initial,
+        fullName: s.full_name,
+        photo: s.photo,
+        fingerprint: s.fingerprint,
+      }));
+      setStudents(transformedStudents);
     } catch (error) {
       console.error("Failed to load students:", error);
     }
@@ -116,15 +98,9 @@ export default function Vote({ studentData = null, onLogout = () => {} }) {
       setLoading(true);
       setError("");
 
-      const storedCandidates = await AsyncStorage.getItem(
-        CANDIDATES_STORAGE_KEY
-      );
+      const storedCandidates = await candidatesDB.getAll();
 
-      if (
-        !storedCandidates ||
-        !Array.isArray(storedCandidates) ||
-        storedCandidates.length === 0
-      ) {
+      if (!storedCandidates || storedCandidates.length === 0) {
         setError("No candidates found. Please contact the administrator.");
         setLoading(false);
         return;
@@ -145,7 +121,7 @@ export default function Vote({ studentData = null, onLogout = () => {} }) {
         positionGroups[positionKey].candidates.push({
           name: candidate.name,
           schoolId: candidate.schoolId,
-          partyList: candidate.partyList, // Include party list info
+          partyList: candidate.partyList,
         });
       });
 
@@ -239,55 +215,24 @@ export default function Vote({ studentData = null, onLogout = () => {} }) {
 
   const saveVotes = async (votesData) => {
     try {
-      const voteRecord = {
+      const voteData = {
         studentId: validatedStudent.schoolId,
         studentName: validatedStudent.fullName,
         votes: votesData,
-        timestamp: new Date().toISOString(),
-        submittedAt: Date.now(),
       };
 
-      await AsyncStorage.setItem(
-        `vote_${validatedStudent.schoolId}`,
-        voteRecord
-      );
-
-      const allVotes = (await AsyncStorage.getItem("all_votes")) || [];
-      allVotes.push(voteRecord);
-      await AsyncStorage.setItem("all_votes", allVotes);
-
-      await updateStudentVotingStatus(validatedStudent.schoolId);
+      await votesDB.submit(voteData);
+      console.log("Vote submitted successfully");
     } catch (error) {
       console.error("Error saving votes:", error);
       throw new Error("Failed to save vote. Please try again.");
     }
   };
 
+  // No longer needed - voting status update happens in votesDB.submit
   const updateStudentVotingStatus = async (studentId) => {
-    try {
-      const storedStudents = await AsyncStorage.getItem(STUDENTS_STORAGE_KEY);
-      if (!storedStudents || !Array.isArray(storedStudents)) {
-        throw new Error("Unable to access student database");
-      }
-
-      const updatedStudents = storedStudents.map((student) => {
-        if (student.schoolId.toLowerCase() === studentId.toLowerCase()) {
-          return {
-            ...student,
-            hasVoted: true,
-            votingStatus: "completed",
-            votedAt: new Date().toISOString(),
-            votedTimestamp: Date.now(),
-          };
-        }
-        return student;
-      });
-
-      await AsyncStorage.setItem(STUDENTS_STORAGE_KEY, updatedStudents);
-      console.log(`Updated voting status for student: ${studentId}`);
-    } catch (error) {
-      console.error("Error updating student voting status:", error);
-    }
+    // This is now handled by votesDB.submit
+    return Promise.resolve();
   };
 
   const handleCancelSubmit = () => {

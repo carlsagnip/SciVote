@@ -1,31 +1,7 @@
 import { useState, useEffect } from "react";
 import { User } from "lucide-react";
 import ErrorBanner from "../components/ErrorBanner";
-
-// Simulated async storage functions
-const AsyncStorage = {
-  getItem: async (key) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const data = localStorage.getItem(key);
-        resolve(data ? JSON.parse(data) : null);
-      }, 100);
-    });
-  },
-
-  setItem: async (key, value) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        localStorage.setItem(key, JSON.stringify(value));
-        resolve();
-      }, 100);
-    });
-  },
-};
-
-const STUDENTS_STORAGE_KEY = "registered_students";
-const CANDIDATES_STORAGE_KEY = "registered_candidates";
-const PARTYLISTS_STORAGE_KEY = "party_lists"; // New storage key for party lists
+import { studentsDB, partyListsDB, candidatesDB } from "../lib/supabaseHelpers";
 
 export default function Candidates({ onBack }) {
   const [candidates, setCandidates] = useState([]);
@@ -61,31 +37,25 @@ export default function Candidates({ onBack }) {
       setLoading(true);
 
       // Load registered students
-      const storedStudents = await AsyncStorage.getItem(STUDENTS_STORAGE_KEY);
-      if (storedStudents && Array.isArray(storedStudents)) {
-        setRegisteredStudents(storedStudents);
-      } else {
-        setRegisteredStudents([]);
-      }
+      const studentsData = await studentsDB.getAll();
+      const transformedStudents = studentsData.map((s) => ({
+        schoolId: s.school_id,
+        firstName: s.first_name,
+        lastName: s.last_name,
+        middleInitial: s.middle_initial,
+        fullName: s.full_name,
+        photo: s.photo,
+        fingerprint: s.fingerprint,
+      }));
+      setRegisteredStudents(transformedStudents);
 
       // Load party lists
-      const storedPartyLists = await AsyncStorage.getItem(
-        PARTYLISTS_STORAGE_KEY
-      );
-      if (storedPartyLists && Array.isArray(storedPartyLists)) {
-        setPartyLists(storedPartyLists);
-      } else {
-      }
+      const partyListsData = await partyListsDB.getAll();
+      setPartyLists(partyListsData);
 
       // Load candidates
-      const storedCandidates = await AsyncStorage.getItem(
-        CANDIDATES_STORAGE_KEY
-      );
-      if (storedCandidates && Array.isArray(storedCandidates)) {
-        setCandidates(storedCandidates);
-      } else {
-        setCandidates([]);
-      }
+      const candidatesData = await candidatesDB.getAll();
+      setCandidates(candidatesData);
     } catch (error) {
       console.error("Failed to load data:", error);
       setErrorMessage("Failed to load data. Please try again.");
@@ -94,27 +64,14 @@ export default function Candidates({ onBack }) {
     }
   };
 
+  // No longer needed - operations are done directly
   const saveCandidates = async (candidatesData) => {
-    try {
-      setSaving(true);
-      await AsyncStorage.setItem(CANDIDATES_STORAGE_KEY, candidatesData);
-      setSuccessMessage("Candidate data saved successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.error("Failed to save candidates:", error);
-      setErrorMessage("Failed to save candidate data. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+    return Promise.resolve();
   };
 
+  // No longer needed - operations are done directly
   const savePartyLists = async (partyListsData) => {
-    try {
-      await AsyncStorage.setItem(PARTYLISTS_STORAGE_KEY, partyListsData);
-    } catch (error) {
-      console.error("Failed to save party lists:", error);
-      setErrorMessage("Failed to save party lists. Please try again.");
-    }
+    return Promise.resolve();
   };
 
   // Function to add new party list
@@ -136,9 +93,10 @@ export default function Candidates({ onBack }) {
 
     try {
       setAddingParty(true);
-      const updatedPartyLists = [...partyLists, newPartyName.trim()];
-      setPartyLists(updatedPartyLists);
-      await savePartyLists(updatedPartyLists);
+      await partyListsDB.create(newPartyName.trim());
+
+      // Reload data
+      await loadData();
 
       setNewPartyName("");
       setShowAddPartyForm(false);
@@ -169,11 +127,10 @@ export default function Candidates({ onBack }) {
     }
 
     try {
-      const updatedPartyLists = partyLists.filter(
-        (party) => party !== partyToRemove
-      );
-      setPartyLists(updatedPartyLists);
-      await savePartyLists(updatedPartyLists);
+      await partyListsDB.delete(partyToRemove);
+
+      // Reload data
+      await loadData();
 
       setSuccessMessage(`"${partyToRemove}" party list removed successfully!`);
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -260,29 +217,51 @@ export default function Candidates({ onBack }) {
       return;
     }
 
-    const newCandidate = {
-      id: Date.now(),
-      name: student.fullName,
-      schoolId: student.schoolId,
-      position,
-      partyList,
-    };
+    try {
+      setSaving(true);
+      const newCandidate = {
+        name: student.fullName,
+        schoolId: student.schoolId,
+        position,
+        partyList,
+      };
 
-    const updatedCandidates = [...candidates, newCandidate];
-    setCandidates(updatedCandidates);
-    await saveCandidates(updatedCandidates);
+      await candidatesDB.create(newCandidate);
 
-    setSelectedStudent("");
-    setStudentSearchTerm("");
-    setPosition("");
-    setPartyList("");
-    setErrorMessage("");
+      // Reload data
+      await loadData();
+
+      setSelectedStudent("");
+      setStudentSearchTerm("");
+      setPosition("");
+      setPartyList("");
+      setErrorMessage("");
+      setSuccessMessage("Candidate added successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error("Failed to add candidate:", error);
+      setErrorMessage("Failed to add candidate. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const removeCandidate = async (id) => {
-    const updatedCandidates = candidates.filter((c) => c.id !== id);
-    setCandidates(updatedCandidates);
-    await saveCandidates(updatedCandidates);
+    try {
+      setSaving(true);
+      await candidatesDB.delete(id);
+
+      // Reload data
+      await loadData();
+
+      setSuccessMessage("Candidate removed successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error("Failed to remove candidate:", error);
+      setErrorMessage("Failed to remove candidate. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const clearFilters = () => {
